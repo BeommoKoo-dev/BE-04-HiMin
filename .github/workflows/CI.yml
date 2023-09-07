@@ -34,7 +34,7 @@ jobs:
         echo "${{ secrets.DATABASE_PROPERTIES }}" >> ./application.yml
       shell: bash
     - name: Setup MySQL
-      uses: mirromutth/mysql-action@v1.1
+      uses: samin/mysql-action@v1
       with:
         host port: 3306
         container port: 3306
