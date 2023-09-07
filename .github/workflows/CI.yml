@@ -40,7 +40,7 @@ jobs:
         container port: 3306
         mysql database: 'himin' 
         mysql user: 'test'
-        mysql password: 'root1234'
+        mysql password: ${{ secrets.MYSQL_PASSWORD }}
     - name: Grant execute permission for gradlew
       run: chmod +x ./gradlew
     - name: Build with Gradle
