@@ -32,6 +32,7 @@ jobs:
         touch ./application.properties
         
         echo "${{ secrets.DATABASE_PROPERTIES }}" >> ./application.yml
+      shell: bash
     - name: Setup MySQL
       uses: mirromutth/mysql-action@v1.1
       with:
