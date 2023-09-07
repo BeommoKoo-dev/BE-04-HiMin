@@ -37,7 +37,7 @@ jobs:
       uses: mirromutth/mysql-action@v1.1
       with:
         mysql database: 'himin' 
-        mysql user: 'test'
+        mysql user: 'root'
         mysql password: ${{ secrets.MYSQL_PASSWORD }}
     - name: Grant execute permission for gradlew
       run: chmod +x ./gradlew
