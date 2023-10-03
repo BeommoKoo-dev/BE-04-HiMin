@@ -34,9 +34,9 @@ public class Order {
 
 	private static final int MIN_ORDER_PRICE = 0;
 
-	private static final int MAX_ADDRESS_LENGTH = 50;
+	public static final int MAX_ADDRESS_LENGTH = 50;
 
-	private static final int MAX_REQUIREMENT_LENGTH = 30;
+	public static final int MAX_REQUIREMENT_LENGTH = 30;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -98,11 +98,11 @@ public class Order {
 		orderItems.remove(orderItem);
 	}
 
-	public void addOrderPrice(int orderItemPrice) {
-		if (orderItemPrice < MIN_ORDER_PRICE) {
-			throw new RuntimeException("가격이 0이하일 수 없습니다.");
+	public void calculateOrderPrice() {
+		for (OrderItem orderItem : orderItems) {
+			price += orderItem.calculateOrderItemPrice();
 		}
-		price += orderItemPrice;
+		price += shop.getDeliveryTip();
 	}
 
 	private void validateAddress(String address) {

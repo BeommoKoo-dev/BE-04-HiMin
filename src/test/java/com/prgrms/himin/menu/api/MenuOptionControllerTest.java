@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,9 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +42,7 @@ import com.prgrms.himin.setup.request.MenuOptionCreateRequestBuilder;
 import com.prgrms.himin.setup.request.MenuOptionUpdateRequestBuilder;
 import com.prgrms.himin.shop.domain.Shop;
 
-@Transactional
+@Sql("/truncate.sql")
 @SpringBootTest
 @AutoConfigureMockMvc
 public class MenuOptionControllerTest {
@@ -252,8 +253,8 @@ public class MenuOptionControllerTest {
 
 			// then
 			resultActions.andExpect(status().isOk());
-			boolean result = menuOptionRepository.existsById(savedMenuOption.getId());
-			assertThat(result).isFalse();
+			Optional<MenuOption> menuOption = menuOptionRepository.findById(savedMenuOption.getId());
+			assertThat(menuOption).isEmpty();
 		}
 
 		@DisplayName("유효하지 않은 id로 인해 실패한다.")

@@ -2,9 +2,14 @@ package com.prgrms.himin.member.application;
 
 import java.util.List;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.prgrms.himin.global.config.security.jwt.JwtAuthentication;
+import com.prgrms.himin.global.config.security.jwt.JwtAuthenticationToken;
 import com.prgrms.himin.global.error.exception.BusinessException;
 import com.prgrms.himin.global.error.exception.EntityNotFoundException;
 import com.prgrms.himin.global.error.exception.ErrorCode;
@@ -20,6 +25,7 @@ import com.prgrms.himin.member.dto.request.MemberLoginRequest;
 import com.prgrms.himin.member.dto.request.MemberUpdateRequest;
 import com.prgrms.himin.member.dto.response.AddressResponse;
 import com.prgrms.himin.member.dto.response.MemberCreateResponse;
+import com.prgrms.himin.member.dto.response.MemberLoginResponse;
 import com.prgrms.himin.member.dto.response.MemberResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -33,26 +39,27 @@ public class MemberService {
 
 	private final AddressRepository addressRepository;
 
+	private final PasswordEncoder passwordEncoder;
+
+	private final AuthenticationManager authenticationManager;
+
 	@Transactional
 	public MemberCreateResponse createMember(MemberCreateRequest request) {
-		Member member = request.toEntity();
-		Address address = new Address(
-			request.addressAlias(),
-			request.address()
-		);
+		String encodedPassword = passwordEncoder.encode(request.password());
+		Member member = request.toEntity(encodedPassword);
+		Address address = new Address(request.addressAlias(), request.address());
 		address.attachTo(member);
 		Member savedMember = memberRepository.save(member);
 
 		return MemberCreateResponse.from(savedMember);
 	}
 
-	public void login(MemberLoginRequest request) {
-		if (!memberRepository.existsMemberByLoginIdAndPassword(
-			request.loginId(),
-			request.password()
-		)) {
-			throw new BusinessException(ErrorCode.MEMBER_LOGIN_FAIL);
-		}
+	public MemberLoginResponse login(MemberLoginRequest request) {
+		JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(request.loginId(), request.password());
+		Authentication authenticated = authenticationManager.authenticate(authenticationToken);
+		JwtAuthentication authentication = (JwtAuthentication)authenticated.getPrincipal();
+		Member member = (Member)authenticated.getDetails();
+		return new MemberLoginResponse(authentication.getToken(), member.getId(), member.getRoles());
 	}
 
 	public MemberResponse getMember(Long memberId) {
@@ -71,15 +78,18 @@ public class MemberService {
 	@Transactional
 	public void updateMember(
 		Long memberId,
-		MemberUpdateRequest.Info request) {
+		MemberUpdateRequest.Info request
+	) {
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(
 				() -> new EntityNotFoundException(ErrorCode.MEMBER_NOT_FOUND)
 			);
 
+		String encodedPassword = passwordEncoder.encode(request.password());
+
 		member.updateInfo(
 			request.loginId(),
-			request.password(),
+			Member.password(request.password(), encodedPassword),
 			request.name(),
 			request.phone(),
 			request.birthday()
@@ -155,9 +165,6 @@ public class MemberService {
 			throw new BusinessException(ErrorCode.MEMBER_ADDRESS_NOT_MATCH);
 		}
 
-		address.updateAddress(
-			request.addressAlias(),
-			request.address()
-		);
+		address.updateAddress(request.addressAlias(), request.address());
 	}
 }

@@ -1,12 +1,11 @@
 package com.prgrms.himin.shop.api;
 
-import java.util.List;
-
 import javax.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,10 +16,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.prgrms.himin.shop.application.ShopService;
-import com.prgrms.himin.shop.domain.Category;
+import com.prgrms.himin.shop.domain.ShopSort;
 import com.prgrms.himin.shop.dto.request.ShopCreateRequest;
+import com.prgrms.himin.shop.dto.request.ShopSearchCondition;
 import com.prgrms.himin.shop.dto.request.ShopUpdateRequest;
 import com.prgrms.himin.shop.dto.response.ShopResponse;
+import com.prgrms.himin.shop.dto.response.ShopsResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -46,17 +47,17 @@ public class ShopController {
 	}
 
 	@GetMapping
-	public ResponseEntity<List<ShopResponse>> getShops(
-		@RequestParam(required = false) String name,
-		@RequestParam(required = false) Category category,
-		@RequestParam(required = false) String address,
-		@RequestParam(required = false) Integer deliveryTip
+	public ResponseEntity<ShopsResponse> getShops(
+		@ModelAttribute ShopSearchCondition shopSearchCondition,
+		@RequestParam(required = false, defaultValue = "10") int size,
+		@RequestParam(required = false) Long cursor,
+		@RequestParam(required = false) String sort
 	) {
-		List<ShopResponse> responses = shopService.getShops(
-			name,
-			category,
-			address,
-			deliveryTip
+		ShopsResponse responses = shopService.getShops(
+			shopSearchCondition,
+			size,
+			cursor,
+			ShopSort.from(sort)
 		);
 
 		return ResponseEntity.ok(responses);
@@ -85,7 +86,27 @@ public class ShopController {
 	@DeleteMapping("/{shopId}")
 	public ResponseEntity<Void> deleteShop(@PathVariable Long shopId) {
 		shopService.deleteShop(shopId);
-		
+
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/{shopId}/cook-beginning/{orderId}")
+	public ResponseEntity<Void> startCooking(
+		@PathVariable Long shopId,
+		@PathVariable Long orderId
+	) {
+		shopService.startCooking(shopId, orderId);
+
+		return ResponseEntity.ok().build();
+	}
+
+	@PostMapping("/{shopId}/cook-completion/{orderId}")
+	public ResponseEntity<Void> finishCooking(
+		@PathVariable Long shopId,
+		@PathVariable Long orderId
+	) {
+		shopService.finishCooking(shopId, orderId);
+
 		return ResponseEntity.ok().build();
 	}
 }

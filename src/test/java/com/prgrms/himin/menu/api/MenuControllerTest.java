@@ -3,7 +3,6 @@ package com.prgrms.himin.menu.api;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.Optional;
@@ -20,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -37,6 +37,7 @@ import com.prgrms.himin.setup.request.MenuCreateRequestBuilder;
 import com.prgrms.himin.setup.request.MenuUpdateRequestBuilder;
 import com.prgrms.himin.shop.domain.Shop;
 
+@Sql("/truncate.sql")
 @SpringBootTest
 @AutoConfigureMockMvc
 class MenuControllerTest {
@@ -48,7 +49,7 @@ class MenuControllerTest {
 
 	@Autowired
 	MockMvc mvc;
-
+	
 	@Autowired
 	ObjectMapper objectMapper;
 
@@ -86,13 +87,9 @@ class MenuControllerTest {
 			String body = objectMapper.writeValueAsString(request);
 
 			// when
-			ResultActions resultActions = mvc.perform(post(
-					BASE_URL,
-					shop.getShopId()
-				)
-					.content(body)
-					.contentType(MediaType.APPLICATION_JSON))
-				.andDo(print());
+			ResultActions resultActions = mvc.perform(post(BASE_URL, shop.getShopId())
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON));
 
 			// then
 			resultActions.andExpect(status().isOk())
@@ -112,13 +109,9 @@ class MenuControllerTest {
 			String body = objectMapper.writeValueAsString(request);
 
 			// when
-			ResultActions resultActions = mvc.perform(post(
-					BASE_URL,
-					shop.getShopId()
-				)
-					.content(body)
-					.contentType(MediaType.APPLICATION_JSON))
-				.andDo(print());
+			ResultActions resultActions = mvc.perform(post(BASE_URL, shop.getShopId())
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON));
 
 			// then
 			resultActions.andExpect(status().isBadRequest())
@@ -147,12 +140,11 @@ class MenuControllerTest {
 
 			// when
 			ResultActions resultActions = mvc.perform(get(
-					GET_URL,
-					shop.getShopId(),
-					savedMenu.getId()
-				)
-					.contentType(MediaType.APPLICATION_JSON))
-				.andDo(print());
+				GET_URL,
+				shop.getShopId(),
+				savedMenu.getId()
+			)
+				.contentType(MediaType.APPLICATION_JSON));
 
 			// then
 			resultActions.andExpect(status().isOk())
@@ -171,12 +163,11 @@ class MenuControllerTest {
 
 			// when
 			ResultActions resultActions = mvc.perform(get(
-					GET_URL,
-					shop.getShopId(),
-					notExistMenuId
-				)
-					.contentType(MediaType.APPLICATION_JSON))
-				.andDo(print());
+				GET_URL,
+				shop.getShopId(),
+				notExistMenuId
+			)
+				.contentType(MediaType.APPLICATION_JSON));
 
 			// then
 			resultActions.andExpect(status().isNotFound())
@@ -214,13 +205,12 @@ class MenuControllerTest {
 
 			// when
 			ResultActions resultActions = mvc.perform(put(
-					UPDATE_URL,
-					shop.getShopId(),
-					savedMenu.getId()
-				)
-					.content(body)
-					.contentType(MediaType.APPLICATION_JSON))
-				.andDo(print());
+				UPDATE_URL,
+				shop.getShopId(),
+				savedMenu.getId()
+			)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON));
 
 			// then
 			resultActions.andExpect(status().isNoContent());
@@ -242,13 +232,12 @@ class MenuControllerTest {
 
 			// when
 			ResultActions resultActions = mvc.perform(put(
-					UPDATE_URL,
-					shop.getShopId(),
-					savedMenu.getId()
-				)
-					.content(body)
-					.contentType(MediaType.APPLICATION_JSON))
-				.andDo(print());
+				UPDATE_URL,
+				shop.getShopId(),
+				savedMenu.getId()
+			)
+				.content(body)
+				.contentType(MediaType.APPLICATION_JSON));
 
 			// then
 			resultActions.andExpect(status().isBadRequest())
@@ -277,17 +266,15 @@ class MenuControllerTest {
 
 			// when
 			ResultActions resultActions = mvc.perform(delete(
-					DELETE_URL,
-					shop.getShopId(),
-					savedMenu.getId()
-				)
-					.contentType(MediaType.APPLICATION_JSON))
-				.andDo(print());
+				DELETE_URL,
+				shop.getShopId(),
+				savedMenu.getId()
+			));
 
 			// then
 			resultActions.andExpect(status().isOk());
-			boolean result = menuRepository.existsById(savedMenu.getId());
-			assertThat(result).isFalse();
+			Optional<Menu> menu = menuRepository.findById(savedMenu.getId());
+			assertThat(menu).isEmpty();
 		}
 
 		@DisplayName("실패한다.")
@@ -298,12 +285,10 @@ class MenuControllerTest {
 
 			// when
 			ResultActions resultActions = mvc.perform(delete(
-					DELETE_URL,
-					shop.getShopId(),
-					notExistMenuId
-				)
-					.contentType(MediaType.APPLICATION_JSON))
-				.andDo(print());
+				DELETE_URL,
+				shop.getShopId(),
+				notExistMenuId
+			));
 
 			// then
 			resultActions.andExpect(status().isNotFound())

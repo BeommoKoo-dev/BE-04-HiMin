@@ -2,12 +2,14 @@ package com.prgrms.himin.shop.domain;
 
 import java.util.List;
 
+import com.prgrms.himin.shop.dto.request.ShopSearchCondition;
+
 public interface ShopRepositoryCustom {
 
-    List<Shop> searchShops(
-            String name,
-            Category category,
-            String address,
-            Integer deliveryTip
-    );
+	List<Shop> searchShops(
+		ShopSearchCondition shopSearchCondition,
+		int size,
+		Long cursor,
+		ShopSort sort
+	);
 }

@@ -1,19 +1,27 @@
 package com.prgrms.himin.member.domain;
 
+import static java.util.stream.Collectors.*;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.prgrms.himin.global.error.exception.ErrorCode;
 import com.prgrms.himin.global.error.exception.InvalidValueException;
@@ -30,13 +38,15 @@ import lombok.NoArgsConstructor;
 @Table(name = "members")
 public class Member {
 
-	private static final int ID_MAX_LENGTH = 20;
+	public static final int ID_MAX_LENGTH = 20;
 
-	private static final int PASSWORD_MAX_LENGTH = 20;
+	public static final int PASSWORD_MAX_LENGTH = 20;
 
-	private static final int NAME_MAX_LENGTH = 10;
+	private static final int ENCODED_PASSWORD_LENGTH = 60;
 
-	private static final int PHONE_MAX_LENGTH = 15;
+	public static final int NAME_MAX_LENGTH = 10;
+
+	public static final int PHONE_MAX_LENGTH = 15;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,7 +56,7 @@ public class Member {
 	@Column(name = "login_id", nullable = false, length = ID_MAX_LENGTH)
 	private String loginId;
 
-	@Column(name = "password", nullable = false, length = PASSWORD_MAX_LENGTH)
+	@Column(name = "password", nullable = false, length = ENCODED_PASSWORD_LENGTH)
 	private String password;
 
 	@Column(name = "name", nullable = false, length = NAME_MAX_LENGTH)
@@ -65,6 +75,9 @@ public class Member {
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Address> addresses = new ArrayList<>();
 
+	@ElementCollection(fetch = FetchType.EAGER)
+	private List<String> roles = new ArrayList<>();
+
 	@Builder
 	public Member(
 		String loginId,
@@ -74,7 +87,6 @@ public class Member {
 		LocalDate birthday
 	) {
 		validateLoginId(loginId);
-		validatePassword(password);
 		validateName(name);
 		validatePhone(phone);
 		validateBirthDay(birthday);
@@ -84,6 +96,12 @@ public class Member {
 		this.phone = phone;
 		this.birthday = birthday;
 		this.grade = Grade.NEW;
+		this.roles.add(Permission.ROLE_USER.name());
+	}
+
+	public static String password(String password, String encodedPassword) {
+		validatePassword(password);
+		return encodedPassword;
 	}
 
 	public void updateGrade(Grade grade) {
@@ -101,6 +119,21 @@ public class Member {
 		return addresses.remove(address);
 	}
 
+	public List<GrantedAuthority> getAuthorities() {
+		return this.roles.stream()
+			.map(SimpleGrantedAuthority::new)
+			.collect(toList());
+	}
+
+	public void checkPassword(
+		PasswordEncoder passwordEncoder,
+		String credentials
+	) {
+		if (!passwordEncoder.matches(credentials, this.password)) {
+			throw new InvalidValueException(ErrorCode.MEMBER_LOGIN_FAIL);
+		}
+	}
+
 	public void updateInfo(
 		String loginId,
 		String password,
@@ -109,7 +142,6 @@ public class Member {
 		LocalDate birthday
 	) {
 		validateLoginId(loginId);
-		validatePassword(password);
 		validateName(name);
 		validatePhone(phone);
 		validateBirthDay(birthday);
@@ -126,7 +158,7 @@ public class Member {
 		}
 	}
 
-	private void validatePassword(String password) {
+	private static void validatePassword(String password) {
 		if (password == null || password.length() > PASSWORD_MAX_LENGTH) {
 			throw new InvalidValueException(ErrorCode.MEMBER_PASSWORD_BAD_REQUEST);
 		}

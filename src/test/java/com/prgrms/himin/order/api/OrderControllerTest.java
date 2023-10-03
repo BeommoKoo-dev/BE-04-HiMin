@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -44,6 +45,7 @@ import com.prgrms.himin.setup.request.SelectedMenuOptionRequestBuilder;
 import com.prgrms.himin.setup.request.SelectedMenuRequestBuilder;
 import com.prgrms.himin.shop.domain.Shop;
 
+@Sql("/truncate.sql")
 @AutoConfigureMockMvc
 @SpringBootTest
 class OrderControllerTest {
@@ -83,14 +85,6 @@ class OrderControllerTest {
 	@Nested
 	@DisplayName("주문 생성을 할 수 있다.")
 	class CreateOrder {
-
-		private int calculateMenuPrice(Menu menu, int quantity) {
-			return menu.getPrice() * quantity;
-		}
-
-		private int calculateMenuOptionPrice(MenuOption menuOption, int quantity) {
-			return menuOption.getPrice() * quantity;
-		}
 
 		@DisplayName("성공한다.")
 		@Test
@@ -183,7 +177,8 @@ class OrderControllerTest {
 			selectedOptions6.forEach(selectedOption -> selectedOption.attachTo(orderItem2));
 
 			int expectedPrice = orderItem1.calculateOrderItemPrice()
-				+ orderItem2.calculateOrderItemPrice();
+				+ orderItem2.calculateOrderItemPrice()
+				+ shop.getDeliveryTip();
 
 			OrderCreateRequest request = OrderCreateRequestBuilder.successBuild(
 				member.getId(),
@@ -298,7 +293,7 @@ class OrderControllerTest {
 				selectedOptions
 			);
 
-			int expectedPrice = orderItem.calculateOrderItemPrice();
+			int expectedPrice = order.getPrice();
 
 			// when
 			ResultActions resultActions = mvc.perform(get(
@@ -315,11 +310,12 @@ class OrderControllerTest {
 				.andExpect(jsonPath("address").value(order.getAddress()))
 				.andExpect(jsonPath("requirement").value(order.getRequirement()))
 				.andExpect(jsonPath("selectedMenus[0].menuId").value(menu.getId()))
-				.andExpect(jsonPath("selectedMenus[0].quantity").value(orderItem.getQuantity()));
+				.andExpect(jsonPath("selectedMenus[0].quantity").value(orderItem.getQuantity()))
+				.andDo(print());
 
 			for (int menuOptionIdx = 0; menuOptionIdx < selectedOptions.size(); menuOptionIdx++) {
 				resultActions.andExpect(jsonPath("selectedMenus[0].selectedOptionIds[%d]", menuOptionIdx)
-					.value(selectedOptions.get(menuOptionIdx).getSelectedOptionId()));
+					.value(menuOptions.get(menuOptionIdx).getId()));
 			}
 
 			resultActions.andExpect(jsonPath("price").value(expectedPrice));
@@ -362,5 +358,11 @@ class OrderControllerTest {
 				.andExpect(jsonPath("message").value(ErrorCode.ORDER_NOT_FOUND.getMessage()))
 				.andDo(print());
 		}
+	}
+
+	@Nested
+	@DisplayName("주문 목록 조회를 할 수 있다.")
+	class FindOrders {
+
 	}
 }

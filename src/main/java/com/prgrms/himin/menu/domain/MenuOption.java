@@ -1,7 +1,5 @@
 package com.prgrms.himin.menu.domain;
 
-import java.util.Objects;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -25,9 +23,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "menu_options")
 public class MenuOption {
 
-	private static final int MIN_PRICE = 0;
+	public static final int MIN_PRICE = 0;
 
-	private static final int MAX_NAME_LENGTH = 30;
+	public static final int MAX_NAME_LENGTH = 30;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -83,22 +81,5 @@ public class MenuOption {
 		if (name == null || name.length() > MAX_NAME_LENGTH) {
 			throw new InvalidValueException(ErrorCode.MENU_NAME_BAD_REQUEST);
 		}
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
-
-		MenuOption that = (MenuOption)o;
-
-		return Objects.equals(this.id, that.id);
-	}
-
-	@Override
-	public int hashCode() {
-		return id.hashCode();
 	}
 }

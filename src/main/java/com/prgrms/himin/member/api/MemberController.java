@@ -22,6 +22,7 @@ import com.prgrms.himin.member.dto.request.MemberLoginRequest;
 import com.prgrms.himin.member.dto.request.MemberUpdateRequest;
 import com.prgrms.himin.member.dto.response.AddressResponse;
 import com.prgrms.himin.member.dto.response.MemberCreateResponse;
+import com.prgrms.himin.member.dto.response.MemberLoginResponse;
 import com.prgrms.himin.member.dto.response.MemberResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -41,10 +42,10 @@ public class MemberController {
 	}
 
 	@PostMapping("/sign-in")
-	public ResponseEntity<Void> login(@Valid @RequestBody MemberLoginRequest request) {
-		memberService.login(request);
+	public ResponseEntity<MemberLoginResponse> login(@Valid @RequestBody MemberLoginRequest request) {
+		MemberLoginResponse response = memberService.login(request);
 
-		return ResponseEntity.ok().build();
+		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping("/members/{memberId}")
@@ -59,10 +60,7 @@ public class MemberController {
 		@PathVariable Long memberId,
 		@Valid @RequestBody MemberUpdateRequest.Info request
 	) {
-		memberService.updateMember(
-			memberId,
-			request
-		);
+		memberService.updateMember(memberId, request);
 
 		return ResponseEntity.noContent().build();
 	}
@@ -77,11 +75,9 @@ public class MemberController {
 	@PostMapping("/members/{memberId}/addresses")
 	public ResponseEntity<AddressResponse> createAddress(
 		@PathVariable Long memberId,
-		@Valid @RequestBody AddressCreateRequest request) {
-		AddressResponse response = memberService.createAddress(
-			memberId,
-			request
-		);
+		@Valid @RequestBody AddressCreateRequest request
+	) {
+		AddressResponse response = memberService.createAddress(memberId, request);
 
 		return ResponseEntity.ok(response);
 	}
@@ -98,10 +94,7 @@ public class MemberController {
 		@PathVariable Long memberId,
 		@PathVariable Long addressId
 	) {
-		memberService.deleteAddress(
-			memberId,
-			addressId
-		);
+		memberService.deleteAddress(memberId, addressId);
 
 		return ResponseEntity.ok().build();
 	}

@@ -1,7 +1,5 @@
 package com.prgrms.himin.member.domain;
 
-import java.util.Objects;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -25,9 +23,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "addresses")
 public class Address {
 
-	private static final int MAX_ADDRESS_LENGTH = 50;
+	public static final int MAX_ADDRESS_LENGTH = 50;
 
-	private static final int MAX_ADDRESS_ALIAS_LENGTH = 10;
+	public static final int MAX_ADDRESS_ALIAS_LENGTH = 10;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,22 +68,6 @@ public class Address {
 		validateAddress(address);
 		this.addressAlias = addressAlias;
 		this.address = address;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
-		Address address1 = (Address)o;
-
-		return Objects.equals(addressId, address1.addressId);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(addressId, member, addressAlias, address);
 	}
 
 	private void validateAddress(String address) {
